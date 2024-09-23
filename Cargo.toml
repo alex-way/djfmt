@@ -1,0 +1,17 @@
+[package]
+name = "djfmt"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+clap = { version = "4.5.17", features = ["derive"] }
+winnow = "0.6.18"
+
+[dev-dependencies]
+rstest = "0.22.0"
+pretty_assertions = "1.4.0"
+criterion = { version = "0.5.1", features = ["html_reports"] }
+
+[[bench]]
+name = "template_parser_bench"
+harness = false
