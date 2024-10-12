@@ -7,6 +7,8 @@ use winnow::{
     PResult, Parser,
 };
 
+use crate::formatting::Formatable;
+
 /// Parse the key of a HTML attribute
 fn parse_key<'i>(input: &mut &'i str) -> PResult<&'i str> {
     alpha1.parse_next(input)
@@ -106,7 +108,10 @@ where
         let tag = delimited('<', parse_tag, closing_tag).parse_next(input)?;
         Ok(tag)
     }
-    pub fn to_html(&self) -> String {
+}
+
+impl<'i, S> Formatable for Tag<'i, S> {
+    fn formatted(&self, _indent_level: usize) -> String {
         let mut html = String::new();
         html.push('<');
         html.push_str(self.tag_type);
@@ -142,8 +147,10 @@ impl<'i> ClosingTag<'i> {
         let tag = delimited("</", parse_tag, (multispace0, ">", multispace0)).parse_next(input)?;
         Ok(tag)
     }
+}
 
-    pub fn to_html(&self) -> String {
+impl<'i> Formatable for ClosingTag<'i> {
+    fn formatted(&self, _indent_level: usize) -> String {
         format!("</{}>", self.tag_type)
     }
 }
@@ -182,15 +189,20 @@ where
 
         Ok(element)
     }
+}
 
-    pub fn to_html(&self, indent_level: usize) -> String {
+impl<'i, S> Formatable for Element<'i, S>
+where
+    S: BuildHasher + Default,
+{
+    fn formatted(&self, indent_level: usize) -> String {
         let mut html = String::new();
 
         // Create the indent string for the current level
         let mut indent = "\t".repeat(indent_level);
 
         // Add the opening tag with the current indentation
-        html.push_str(&format!("{}{}", indent, self.opening_tag.to_html()));
+        html.push_str(&format!("{}{}", indent, self.opening_tag.formatted(0)));
 
         if !self.children.is_empty() {
             html.push('\n');
@@ -198,7 +210,7 @@ where
 
         // Add each child, increasing the indentation for each child
         for child in &self.children {
-            html.push_str(&child.to_html(indent_level + 1)); // Recursively increase the indentation
+            html.push_str(&child.formatted(indent_level + 1)); // Recursively increase the indentation
         }
 
         if self.children.is_empty() {
@@ -206,7 +218,7 @@ where
         }
 
         // Add the closing tag with the current indentation
-        html.push_str(&format!("{}{}", indent, self.closing_tag.to_html()));
+        html.push_str(&format!("{}{}", indent, self.closing_tag.formatted(0)));
         html.push('\n');
 
         html
@@ -380,7 +392,7 @@ mod tests {
 
         let expected = "<div>\n\t<div height=\"30\"></div>\n\t<div height=\"30\"></div>\n</div>\n";
 
-        let actual = input.to_html(0);
+        let actual = input.formatted(0);
         assert_eq!(expected, actual);
     }
 }

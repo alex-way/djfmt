@@ -17,12 +17,12 @@ mod tests {
     use super::*;
 
     #[rstest]
-    #[case("my_text", "my_text", "")]
-    #[case("{% my_filter %}", "", "{% my_filter %}")]
-    #[case("thing{% my_filter %}", "thing", "{% my_filter %}")]
-    #[case("thing{%", "thing", "{%")]
-    #[case("thing{{", "thing", "{{")]
-    #[case("thing{#", "thing", "{#")]
+    #[case::take_all_text("my_text", "my_text", "")]
+    #[case::dont_take_filter("{% my_filter %}", "", "{% my_filter %}")]
+    #[case::take_text_up_until_filter("thing{% my_filter %}", "thing", "{% my_filter %}")]
+    #[case::take_text_up_until_partial_filter("thing{%", "thing", "{%")]
+    #[case::take_text_up_until_variable("thing{{", "thing", "{{")]
+    #[case::take_text_up_until_single_line_comment("thing{#", "thing", "{#")]
     fn test_parsing_text(
         #[case] input: &str,
         #[case] expected_extracted: &str,

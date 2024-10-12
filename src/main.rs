@@ -1,18 +1,19 @@
 #![allow(dead_code)]
+use clap::Parser as ClapParser;
+use formatting::Formatable;
+use html_parser::Element;
 use std::{
     collections::hash_map::RandomState,
     fs::OpenOptions,
     io::{Read, Seek, SeekFrom, Write},
     path::PathBuf,
 };
-
-use html_parser::Element;
 use winnow::Parser;
 
-use clap::Parser as ClapParser;
-
+pub mod formatting;
 pub mod html_parser;
 pub mod template_parser;
+
 /// Simple program to greet a person
 #[derive(ClapParser, Debug)]
 #[command(version, about, long_about = None)]
@@ -46,7 +47,7 @@ fn main() {
     file.read_to_string(&mut contents).unwrap();
 
     let parsed = Element::<RandomState>::parse.parse(&contents).unwrap();
-    let formatted = parsed.to_html(0);
+    let formatted = parsed.formatted(0);
 
     file.set_len(0).unwrap();
     file.seek(SeekFrom::Start(0)).unwrap();

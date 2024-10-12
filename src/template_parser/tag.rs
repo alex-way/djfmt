@@ -1,13 +1,9 @@
 use super::filter::parse_filter_chain;
 use super::variable::parse_variable;
-use winnow::prelude::*;
-use winnow::token::literal;
 use winnow::{
     ascii::multispace0,
     combinator::{delimited, opt},
     error::ParserError,
-    stream::Stream,
-    token::take_while,
     PResult, Parser,
 };
 
@@ -15,6 +11,7 @@ use winnow::{
 #[derive(Debug)]
 pub struct Tag<'i> {
     tag_type: &'i str,
+    #[allow(dead_code)]
     arguments: Vec<&'i str>,
 }
 
@@ -42,6 +39,7 @@ impl<'i> Tag<'i> {
     }
 }
 
+#[allow(dead_code)]
 /// A simple parser for an individual tag: `{% my_tag %}`
 pub fn parse_individual_tag<'i>(input: &mut &'i str) -> PResult<Tag<'i>> {
     let tag = generic_tag(parse_variable).parse_next(input)?;
@@ -53,6 +51,7 @@ pub fn parse_individual_tag<'i>(input: &mut &'i str) -> PResult<Tag<'i>> {
     Ok(tag)
 }
 
+#[allow(dead_code)]
 pub fn parse_specific_tag<'i>(input: &mut &'i str, tag_name: &str) -> PResult<Tag<'i>> {
     let tag = generic_tag((
         tag_name,

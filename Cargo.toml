@@ -4,12 +4,12 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-clap = { version = "4.5.17", features = ["derive"] }
-winnow = "0.6.18"
+clap = { version = "4.5.20", features = ["derive"] }
+winnow = "0.6.20"
 
 [dev-dependencies]
-rstest = "0.22.0"
-pretty_assertions = "1.4.0"
+rstest = "0.23.0"
+pretty_assertions = "1.4.1"
 criterion = { version = "0.5.1", features = ["html_reports"] }
 
 [[bench]]
