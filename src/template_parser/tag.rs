@@ -1,3 +1,5 @@
+use crate::formatting::Formatable;
+
 use super::filter::parse_filter_chain;
 use super::variable::parse_variable;
 use winnow::{
@@ -36,6 +38,12 @@ impl<'i> Tag<'i> {
             // arguments: tag.2,
         };
         Ok(tag)
+    }
+}
+
+impl<'i> Formatable for Tag<'i> {
+    fn formatted(&self, _indent_level: usize) -> String {
+        format!("{:?}", self)
     }
 }
 

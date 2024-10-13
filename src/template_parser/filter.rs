@@ -1,3 +1,5 @@
+use crate::formatting::Formatable;
+
 use super::variable::parse_variable;
 use winnow::{
     ascii::multispace0,
@@ -45,6 +47,17 @@ impl<'i> Filter<'i> {
     }
 }
 
+impl<'i> Formatable for Filter<'i> {
+    fn formatted(&self, _indent_level: usize) -> String {
+        let return_string = format!("|{}", self.filter_type).to_string();
+        if let Some(argument) = self.argument {
+            return_string + &format!(":\"{}\"", argument)
+        } else {
+            return_string
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use pretty_assertions::assert_eq;
@@ -88,6 +101,20 @@ mod tests {
     })]
     fn test_filter_parsing(#[case] input: &str, #[case] expected: Filter) {
         let actual = Filter::parse.parse(input).unwrap();
+        assert_eq!(actual, expected)
+    }
+
+    #[rstest]
+    #[case::no_argument(Filter {
+        filter_type: "my_filter",
+        argument: None,
+    },"|my_filter")]
+    #[case::single_argument(Filter {
+        filter_type: "my_filter",
+        argument: Some("my_arg"),
+    }, "|my_filter:\"my_arg\"")]
+    fn test_formatting_filter(#[case] input: Filter, #[case] expected: String) {
+        let actual = input.formatted(0);
         assert_eq!(actual, expected)
     }
 }

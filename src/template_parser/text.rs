@@ -4,9 +4,18 @@ use winnow::{
     PResult, Parser,
 };
 
+use crate::formatting::Formatable;
+
+/// Parses all non-template syntax text
 pub fn parse_text<'i>(input: &mut &'i str) -> PResult<&'i str> {
     let valid_token_starts = ("{%", "{{", "{#");
     alt((take_until(0.., valid_token_starts), rest)).parse_next(input)
+}
+
+impl Formatable for &str {
+    fn formatted(&self, _indent_level: usize) -> String {
+        self.to_string()
+    }
 }
 
 #[cfg(test)]
