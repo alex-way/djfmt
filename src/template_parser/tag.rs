@@ -12,9 +12,9 @@ use winnow::{
 /// A tag in a template. Can either be a simple tag (`{% my_tag %}`) or a tag with arguments
 #[derive(Debug)]
 pub struct Tag<'i> {
-    tag_type: &'i str,
+    pub tag_type: &'i str,
     #[allow(dead_code)]
-    arguments: Vec<&'i str>,
+    pub arguments: Vec<&'i str>,
 }
 
 impl<'i> PartialEq for Tag<'i> {

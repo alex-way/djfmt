@@ -22,9 +22,9 @@ pub fn parse_variable<'i>(input: &mut &'i str) -> PResult<&'i str> {
 
 #[derive(Debug)]
 pub struct VariableTag<'i> {
-    tag_type: &'i str,
+    pub tag_type: &'i str,
     #[allow(dead_code)]
-    filters: Vec<Filter<'i>>,
+    pub filters: Vec<Filter<'i>>,
 }
 
 impl<'i> PartialEq for VariableTag<'i> {

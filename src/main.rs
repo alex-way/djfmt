@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 use clap::Parser as ClapParser;
-use formatting::Formatable;
-use html_parser::Element;
+use djfmt::formatting::Formatable;
+use djfmt::html_parser::Element;
 use std::{
     collections::hash_map::RandomState,
     fs::OpenOptions,
@@ -9,10 +9,6 @@ use std::{
     path::PathBuf,
 };
 use winnow::Parser;
-
-pub mod formatting;
-pub mod html_parser;
-pub mod template_parser;
 
 /// Simple program to greet a person
 #[derive(ClapParser, Debug)]

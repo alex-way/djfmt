@@ -9,7 +9,7 @@ use winnow::{
 /// {% endcomment %}`).
 #[derive(Debug)]
 pub struct Comment<'i> {
-    contents: &'i str,
+    pub contents: &'i str,
 }
 
 impl<'i> PartialEq for Comment<'i> {
