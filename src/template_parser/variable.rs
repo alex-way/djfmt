@@ -23,7 +23,6 @@ pub fn parse_variable<'i>(input: &mut &'i str) -> PResult<&'i str> {
 #[derive(Debug)]
 pub struct VariableTag<'i> {
     pub tag_type: &'i str,
-    #[allow(dead_code)]
     pub filters: Vec<Filter<'i>>,
 }
 

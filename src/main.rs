@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 use clap::Parser as ClapParser;
 use djfmt::formatting::Formatable;
 use djfmt::html_parser::Element;

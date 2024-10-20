@@ -3,10 +3,14 @@ use crate::formatting::Formatable;
 use super::variable::parse_variable;
 use winnow::{
     ascii::multispace0,
-    combinator::{delimited, opt, separated},
+    combinator::{alt, delimited, opt, separated},
     token::take_while,
     PResult, Parser,
 };
+
+pub fn parse_quote(input: &mut &str) -> PResult<char> {
+    alt(('\'', '"')).parse_next(input)
+}
 
 pub fn parse_filter_chain<'i>(input: &mut &'i str) -> PResult<Vec<Filter<'i>>> {
     let mut parse_filter = separated(0.., Filter::parse, (multispace0, '|', multispace0));
@@ -30,11 +34,11 @@ impl<'i> Filter<'i> {
         let filter_type = parse_variable.parse_next(input)?;
 
         let argument_parser = delimited(
-            (multispace0, ':', multispace0, '"'),
+            (multispace0, ':', multispace0, parse_quote),
             take_while(1.., |c: char| {
-                c.is_ascii() && c != '"' && c != '\\' && c != '\n' && c != '\r'
+                c.is_ascii() && c != '"' && c != '\'' && c != '\\' && c != '\n' && c != '\r'
             }),
-            (multispace0, '"', multispace0),
+            (multispace0, parse_quote, multispace0),
         );
         let argument = opt(argument_parser).parse_next(input)?;
 
@@ -99,9 +103,25 @@ mod tests {
         filter_type: "my_filter",
         argument: Some("my_arg"),
     })]
+    #[case::single_argument("my_filter:'my_arg'", Filter {
+        filter_type: "my_filter",
+        argument: Some("my_arg"),
+    })]
     fn test_filter_parsing(#[case] input: &str, #[case] expected: Filter) {
         let actual = Filter::parse.parse(input).unwrap();
         assert_eq!(actual, expected)
+    }
+
+    #[rstest]
+    #[case("my_filter:")]
+    #[case("my_filter:\"")]
+    #[case("my_filter:'")]
+    #[case("my_filter:\"my_arg")]
+    #[case("my_filter:'my_arg")]
+    // #[case("my_filter:'my_arg\"")]
+    fn test_filter_parsing_unsuccessful(#[case] input: &str) {
+        let actual = Filter::parse.parse(input);
+        assert!(actual.is_err())
     }
 
     #[rstest]

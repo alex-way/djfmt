@@ -13,7 +13,6 @@ use winnow::{
 #[derive(Debug)]
 pub struct Tag<'i> {
     pub tag_type: &'i str,
-    #[allow(dead_code)]
     pub arguments: Vec<&'i str>,
 }
 
