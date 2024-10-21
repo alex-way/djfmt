@@ -3,6 +3,7 @@ use tag::Tag;
 use variable::VariableTag;
 use winnow::{PResult, Parser};
 
+mod argument;
 mod comment;
 mod filter;
 mod tag;

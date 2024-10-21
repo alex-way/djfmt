@@ -1,7 +1,7 @@
 use crate::formatting::Formatable;
 
-use super::filter::parse_filter_chain;
 use super::variable::parse_variable;
+use super::{argument::TagArgument, filter::parse_filter_chain};
 use winnow::{
     ascii::multispace0,
     combinator::{delimited, opt},
@@ -13,7 +13,7 @@ use winnow::{
 #[derive(Debug)]
 pub struct Tag<'i> {
     pub tag_type: &'i str,
-    pub arguments: Vec<&'i str>,
+    pub arguments: Vec<TagArgument<'i>>,
 }
 
 impl<'i> PartialEq for Tag<'i> {

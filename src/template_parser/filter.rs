@@ -4,6 +4,7 @@ use super::variable::parse_variable;
 use winnow::{
     ascii::multispace0,
     combinator::{alt, delimited, opt, separated},
+    stream::AsChar,
     token::take_while,
     PResult, Parser,
 };
@@ -36,7 +37,7 @@ impl<'i> Filter<'i> {
         let argument_parser = delimited(
             (multispace0, ':', multispace0, parse_quote),
             take_while(1.., |c: char| {
-                c.is_ascii() && c != '"' && c != '\'' && c != '\\' && c != '\n' && c != '\r'
+                c.is_ascii() && c != '"' && c != '\'' && c != '\\' && !c.is_newline()
             }),
             (multispace0, parse_quote, multispace0),
         );
