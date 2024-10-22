@@ -13,13 +13,7 @@ pub enum TagArgumentValue<'i> {
     Variable(&'i str),
 }
 
-#[derive(Debug, PartialEq)]
-pub struct TagArgument<'i> {
-    pub value: TagArgumentValue<'i>,
-    pub filters: Vec<Filter<'i>>,
-}
-
-impl<'i> TagArgument<'i> {
+impl<'i> TagArgumentValue<'i> {
     pub fn parse(input: &mut &'i str) -> PResult<Self> {
         let starts_with_quote = input.starts_with('\'') || input.starts_with('"');
 
@@ -30,6 +24,26 @@ impl<'i> TagArgument<'i> {
             let variable = parse_variable.parse_next(input)?;
             TagArgumentValue::Variable(variable)
         };
+
+        Ok(value)
+    }
+}
+
+impl<'i> Formatable for TagArgumentValue<'i> {
+    fn formatted(&self, _indent_level: usize) -> String {
+        todo!()
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct TagArgument<'i> {
+    pub value: TagArgumentValue<'i>,
+    pub filters: Vec<Filter<'i>>,
+}
+
+impl<'i> TagArgument<'i> {
+    pub fn parse(input: &mut &'i str) -> PResult<Self> {
+        let value = TagArgumentValue::parse.parse_next(input)?;
 
         let filters = parse_filter_chain.parse_next(input)?;
 
@@ -79,6 +93,19 @@ mod tests {
         filters: vec![Filter {
             filter_type: "my_filter",
             argument: None,
+        }],
+    })]
+    #[case("\"argument\"|my_filter:\"arg\"", TagArgument {
+        value: TagArgumentValue::Text(SingleLineTextString {
+            value: "argument",
+            startquote_char: '"',
+        }),
+        filters: vec![Filter {
+            filter_type: "my_filter",
+            argument: Some(TagArgumentValue::Text(SingleLineTextString {
+                value: "arg",
+                startquote_char: '"',
+            })),
         }],
     })]
     fn test_parsing_filter_chain(#[case] input: &str, #[case] expected: TagArgument) {

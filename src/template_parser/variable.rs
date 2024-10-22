@@ -59,6 +59,8 @@ mod tests {
     use pretty_assertions::assert_eq;
     use rstest::rstest;
 
+    use crate::template_parser::{argument::TagArgumentValue, text::SingleLineTextString};
+
     use super::*;
 
     #[rstest]
@@ -103,20 +105,40 @@ mod tests {
         tag_type: "my_var",
         filters: vec![Filter {
             filter_type: "my_filter",
-            argument: Some("arg1"),
+            argument: Some(
+                TagArgumentValue::Text(SingleLineTextString {
+                    value: "arg1",
+                    startquote_char: '"',
+                })
+            ),
         }, Filter {
             filter_type: "my_filter2",
-            argument: Some("arg2"),
+            argument: Some(
+                TagArgumentValue::Text(SingleLineTextString {
+                    value: "arg2",
+                    startquote_char: '"',
+                })
+            ),
         }],
     })]
     #[case::multiple_filters_with_spaced_arguments("{{ my_var | my_filter : \"arg1\" | my_filter2:\"arg2\" }}", VariableTag {
         tag_type: "my_var",
         filters: vec![Filter {
             filter_type: "my_filter",
-            argument: Some("arg1"),
+            argument: Some(
+                TagArgumentValue::Text(SingleLineTextString {
+                    value: "arg1",
+                    startquote_char: '"',
+                })
+            ),
         }, Filter {
             filter_type: "my_filter2",
-            argument: Some("arg2"),
+            argument: Some(
+                TagArgumentValue::Text(SingleLineTextString {
+                    value: "arg2",
+                    startquote_char: '"',
+                })
+            ),
         }],
     })]
     fn test_parsing_variable_tag(#[case] input: &str, #[case] expected: VariableTag) {

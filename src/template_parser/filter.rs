@@ -1,17 +1,12 @@
 use crate::formatting::Formatable;
 
-use super::variable::parse_variable;
+use super::{argument::TagArgumentValue, variable::parse_variable};
 use winnow::{
     ascii::multispace0,
-    combinator::{alt, delimited, opt, separated},
-    stream::AsChar,
-    token::take_while,
+    combinator::{delimited, opt, separated},
+    error::{ErrMode, ErrorKind, ParserError},
     PResult, Parser,
 };
-
-pub fn parse_quote(input: &mut &str) -> PResult<char> {
-    alt(('\'', '"')).parse_next(input)
-}
 
 pub fn parse_filter_chain<'i>(input: &mut &'i str) -> PResult<Vec<Filter<'i>>> {
     let _ = opt(delimited(multispace0, '|', multispace0)).parse_next(input)?;
@@ -23,7 +18,7 @@ pub fn parse_filter_chain<'i>(input: &mut &'i str) -> PResult<Vec<Filter<'i>>> {
 #[derive(Debug)]
 pub struct Filter<'i> {
     pub filter_type: &'i str,
-    pub argument: Option<&'i str>,
+    pub argument: Option<TagArgumentValue<'i>>,
 }
 
 impl<'i> PartialEq for Filter<'i> {
@@ -36,14 +31,13 @@ impl<'i> Filter<'i> {
     pub fn parse(input: &mut &'i str) -> PResult<Self> {
         let filter_type = parse_variable.parse_next(input)?;
 
-        let argument_parser = delimited(
-            (multispace0, ':', multispace0, parse_quote),
-            take_while(1.., |c: char| {
-                c.is_ascii() && c != '"' && c != '\'' && c != '\\' && !c.is_newline()
-            }),
-            (multispace0, parse_quote, multispace0),
-        );
-        let argument = opt(argument_parser).parse_next(input)?;
+        let semicolon = opt(delimited(multispace0, ':', multispace0)).parse_next(input)?;
+
+        let argument = opt(TagArgumentValue::parse).parse_next(input)?;
+
+        if semicolon.is_some() && argument.is_none() {
+            return Err(ErrMode::from_error_kind(input, ErrorKind::Verify));
+        }
 
         let filter = Self {
             filter_type,
@@ -57,10 +51,12 @@ impl<'i> Filter<'i> {
 impl<'i> Formatable for Filter<'i> {
     fn formatted(&self, _indent_level: usize) -> String {
         let return_string = format!("|{}", self.filter_type).to_string();
-        if let Some(argument) = self.argument {
-            return_string + &format!(":\"{}\"", argument)
-        } else {
-            return_string
+        match &self.argument {
+            Some(argument) => match argument {
+                TagArgumentValue::Text(text) => return_string + &format!(":\"{}\"", text.value),
+                TagArgumentValue::Variable(variable) => return_string + &format!(":{}", variable),
+            },
+            None => return_string,
         }
     }
 }
@@ -69,6 +65,8 @@ impl<'i> Formatable for Filter<'i> {
 mod tests {
     use pretty_assertions::assert_eq;
     use rstest::rstest;
+
+    use crate::template_parser::text::SingleLineTextString;
 
     use super::*;
 
@@ -108,11 +106,21 @@ mod tests {
     })]
     #[case::single_argument("my_filter:\"my_arg\"", Filter {
         filter_type: "my_filter",
-        argument: Some("my_arg"),
+        argument: Some(
+            TagArgumentValue::Text(SingleLineTextString {
+                value: "my_arg",
+                startquote_char: '"',
+            })
+        ),
     })]
     #[case::single_argument("my_filter:'my_arg'", Filter {
         filter_type: "my_filter",
-        argument: Some("my_arg"),
+        argument: Some(
+            TagArgumentValue::Text(SingleLineTextString {
+                value: "my_arg",
+                startquote_char: '\'',
+            })
+        ),
     })]
     fn test_filter_parsing(#[case] input: &str, #[case] expected: Filter) {
         let actual = Filter::parse.parse(input).unwrap();
@@ -123,9 +131,11 @@ mod tests {
     #[case("my_filter:")]
     #[case("my_filter:\"")]
     #[case("my_filter:'")]
+    #[case("my_filter'")]
+    #[case("my_filter\"")]
     #[case("my_filter:\"my_arg")]
     #[case("my_filter:'my_arg")]
-    // #[case("my_filter:'my_arg\"")]
+    #[case("my_filter:'my_arg\"")]
     fn test_filter_parsing_unsuccessful(#[case] input: &str) {
         let actual = Filter::parse.parse(input);
         assert!(actual.is_err())
@@ -138,7 +148,12 @@ mod tests {
     },"|my_filter")]
     #[case::single_argument(Filter {
         filter_type: "my_filter",
-        argument: Some("my_arg"),
+        argument: Some(
+            TagArgumentValue::Text(SingleLineTextString {
+                value: "my_arg",
+                startquote_char: '"',
+            })
+        ),
     }, "|my_filter:\"my_arg\"")]
     fn test_formatting_filter(#[case] input: Filter, #[case] expected: String) {
         let actual = input.formatted(0);
