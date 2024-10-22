@@ -2,6 +2,7 @@ use crate::formatting::Formatable;
 
 use super::variable::parse_variable;
 use super::{argument::TagArgument, filter::parse_filter_chain};
+use winnow::ascii::multispace1;
 use winnow::combinator::separated;
 use winnow::{
     ascii::multispace0,
@@ -30,7 +31,7 @@ impl<'i> Tag<'i> {
             separated(
                 0..,
                 delimited(multispace0, TagArgument::parse, multispace0),
-                ' ',
+                multispace1,
             ),
         ))
         .parse_next(input)?;
@@ -65,7 +66,7 @@ pub fn parse_individual_tag<'i>(input: &mut &'i str) -> PResult<Tag<'i>> {
     let arguments = separated(
         0..,
         delimited(multispace0, TagArgument::parse, multispace0),
-        ' ',
+        multispace1,
     )
     .parse_next(input)?;
 
@@ -88,7 +89,7 @@ pub fn parse_specific_tag<'i>(input: &mut &'i str, tag_name: &str) -> PResult<Ta
     let arguments = separated(
         0..,
         delimited(multispace0, TagArgument::parse, multispace0),
-        ' ',
+        multispace1,
     )
     .parse_next(input)?;
 
