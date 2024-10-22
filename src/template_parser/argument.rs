@@ -71,6 +71,16 @@ mod tests {
         }),
         filters: vec![],
     })]
+    #[case("\"argument\"|my_filter", TagArgument {
+        value: TagArgumentValue::Text(SingleLineTextString {
+            value: "argument",
+            startquote_char: '"',
+        }),
+        filters: vec![Filter {
+            filter_type: "my_filter",
+            argument: None,
+        }],
+    })]
     fn test_parsing_filter_chain(#[case] input: &str, #[case] expected: TagArgument) {
         let actual = TagArgument::parse.parse(input).unwrap();
         assert_eq!(actual, expected)

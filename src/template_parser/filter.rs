@@ -14,6 +14,8 @@ pub fn parse_quote(input: &mut &str) -> PResult<char> {
 }
 
 pub fn parse_filter_chain<'i>(input: &mut &'i str) -> PResult<Vec<Filter<'i>>> {
+    let _ = opt(delimited(multispace0, '|', multispace0)).parse_next(input)?;
+
     let mut parse_filter = separated(0.., Filter::parse, (multispace0, '|', multispace0));
     parse_filter.parse_next(input)
 }
@@ -73,6 +75,10 @@ mod tests {
     #[rstest]
     #[case::no_filters("", vec![])]
     #[case::single_simple_filter("my_filter", vec![Filter {
+        filter_type: "my_filter",
+        argument: None,
+    }])]
+    #[case::single_simple_filter("|my_filter", vec![Filter {
         filter_type: "my_filter",
         argument: None,
     }])]
