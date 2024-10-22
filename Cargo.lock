@@ -242,7 +242,9 @@ version = "0.1.0"
 dependencies = [
  "clap",
  "criterion",
+ "glob",
  "pretty_assertions",
+ "rayon",
  "rstest",
  "winnow",
 ]

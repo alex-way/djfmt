@@ -5,6 +5,8 @@ edition = "2021"
 
 [dependencies]
 clap = { version = "4.5.20", features = ["derive"] }
+glob = "0.3.1"
+rayon = "1.10.0"
 winnow = "0.6.20"
 
 [dev-dependencies]
