@@ -54,7 +54,10 @@ impl<'i> SingleLineTextString<'i> {
 
 impl<'i> Formatable for SingleLineTextString<'i> {
     fn formatted(&self, _indent_level: usize) -> String {
-        format!("{:?}", self)
+        format!(
+            "{}{}{}",
+            self.startquote_char, self.value, self.startquote_char
+        )
     }
 }
 

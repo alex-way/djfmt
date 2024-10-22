@@ -3,6 +3,8 @@ use tag::Tag;
 use variable::VariableTag;
 use winnow::{PResult, Parser};
 
+use crate::formatting::Formatable;
+
 mod argument;
 mod comment;
 mod filter;
@@ -52,6 +54,21 @@ impl<'i> Template<'i> {
         }
 
         Ok(Self { nodes })
+    }
+}
+
+impl<'i> Formatable for Template<'i> {
+    fn formatted(&self, indent_level: usize) -> String {
+        let mut result = String::new();
+        for node in &self.nodes {
+            match node {
+                Node::Variable(var) => result.push_str(&var.formatted(indent_level)),
+                Node::Tag(tag) => result.push_str(&tag.formatted(indent_level)),
+                Node::Comment(comment) => result.push_str(&comment.formatted(indent_level)),
+                Node::Text(text) => result.push_str(text),
+            }
+        }
+        result
     }
 }
 

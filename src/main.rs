@@ -1,13 +1,10 @@
 use clap::Parser as ClapParser;
-use djfmt::formatting::Formatable;
-use djfmt::html_parser::Element;
+use djfmt::{formatting::Formatable, template_parser::Template};
 use std::{
-    collections::hash_map::RandomState,
     fs::OpenOptions,
     io::{Read, Seek, SeekFrom, Write},
     path::PathBuf,
 };
-use winnow::Parser;
 
 /// Simple program to greet a person
 #[derive(ClapParser, Debug)]
@@ -41,7 +38,8 @@ fn main() {
     let mut contents = String::new();
     file.read_to_string(&mut contents).unwrap();
 
-    let parsed = Element::<RandomState>::parse.parse(&contents).unwrap();
+    // let parsed = Element::<RandomState>::parse.parse(&contents).unwrap();
+    let parsed = Template::parse(&mut contents.as_str()).unwrap();
     let formatted = parsed.formatted(0);
 
     file.set_len(0).unwrap();

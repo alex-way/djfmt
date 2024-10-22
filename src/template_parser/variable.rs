@@ -1,3 +1,5 @@
+use crate::formatting::Formatable;
+
 use super::filter::{parse_filter_chain, Filter};
 use winnow::combinator::peek;
 use winnow::token::take;
@@ -24,6 +26,19 @@ pub fn parse_variable<'i>(input: &mut &'i str) -> PResult<&'i str> {
 pub struct VariableTag<'i> {
     pub tag_type: &'i str,
     pub filters: Vec<Filter<'i>>,
+}
+
+impl<'i> Formatable for VariableTag<'i> {
+    fn formatted(&self, _indent_level: usize) -> String {
+        let mut formatted = String::new();
+        formatted.push_str("{{ ");
+        formatted.push_str(self.tag_type);
+        for filter in &self.filters {
+            formatted.push_str(&filter.formatted(0));
+        }
+        formatted.push_str(" }}");
+        formatted
+    }
 }
 
 impl<'i> PartialEq for VariableTag<'i> {

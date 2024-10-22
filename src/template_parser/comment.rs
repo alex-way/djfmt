@@ -4,12 +4,20 @@ use winnow::{
     PResult, Parser,
 };
 
+use crate::formatting::Formatable;
+
 /// A comment tag. Can either be in the single line form (`{# comment #}`) or the multi-line form
 /// (`{% comment %}
 /// {% endcomment %}`).
 #[derive(Debug)]
 pub struct Comment<'i> {
     pub contents: &'i str,
+}
+
+impl Formatable for Comment<'_> {
+    fn formatted(&self, _indent_level: usize) -> String {
+        self.contents.to_string()
+    }
 }
 
 impl<'i> PartialEq for Comment<'i> {

@@ -30,8 +30,11 @@ impl<'i> TagArgumentValue<'i> {
 }
 
 impl<'i> Formatable for TagArgumentValue<'i> {
-    fn formatted(&self, _indent_level: usize) -> String {
-        todo!()
+    fn formatted(&self, indent_level: usize) -> String {
+        match self {
+            TagArgumentValue::Text(text) => text.formatted(indent_level),
+            TagArgumentValue::Variable(variable) => variable.to_string(),
+        }
     }
 }
 
@@ -55,7 +58,19 @@ impl<'i> TagArgument<'i> {
 
 impl<'i> Formatable for TagArgument<'i> {
     fn formatted(&self, _indent_level: usize) -> String {
-        todo!()
+        let value = self.value.formatted(0);
+        let filters = self
+            .filters
+            .iter()
+            .map(|f| f.formatted(0))
+            .collect::<Vec<String>>()
+            .join(" | ");
+
+        if filters.is_empty() {
+            value
+        } else {
+            format!("{} | {}", value, filters)
+        }
     }
 }
 
