@@ -75,6 +75,7 @@ mod tests {
     use super::*;
 
     #[rstest]
+    #[case::take_all_text("\n", "\n", "")]
     #[case::take_all_text("my_text", "my_text", "")]
     #[case::dont_take_filter("{% my_filter %}", "", "{% my_filter %}")]
     #[case::take_text_up_until_filter("thing{% my_filter %}", "thing", "{% my_filter %}")]

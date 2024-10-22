@@ -33,6 +33,7 @@ impl<'i> Template<'i> {
                 nodes.push(Node::Comment(variable));
                 continue;
             }
+
             if let Ok(variable) = variable::VariableTag::parse.parse_next(input) {
                 nodes.push(Node::Variable(variable));
                 continue;

@@ -1,0 +1,74 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+      <head>
+            <meta charset="utf-8" />
+            <meta name="description" value="Notify App" />
+            <meta name="keywords" value="Notify App" />
+            <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+            <meta name="viewport" content="width=device-width, initial-scale=1"/>
+            <link href='{% static "notify/img/favicon.ico" %}'
+                  rel='shortcut icon'
+                  type='image/x-icon'/>
+            <title>
+                  {% block title %}
+                        Notify App
+                  {% endblock title %}
+            </title>
+            <link href="{% static 'notify/css/roboto.css' %}"
+                  rel="stylesheet"
+                  type="text/css"/>
+            <link href="{% static 'notify/css/select2.min.css' %}"
+                  rel="stylesheet"
+                  type="text/css"/>
+            <link href="{% static 'notify/css/bootstrap.min.css' %}"
+                  rel="stylesheet"
+                  type="text/css"/>
+            <link href="{% static 'notify/css/datatables.min.css' %}"
+                  rel="stylesheet"
+                  type="text/css"/>
+            <link href="{% static 'notify/css/multi-select.css' %}"
+                  media="screen"
+                  rel="stylesheet"
+                  type="text/css"/>
+            <link href="{% static 'notify/css/flatpickr.min.css' %}"
+                  rel="stylesheet"
+                  type="text/css"/>
+            <link href="{% static 'notify/css/flatpickr-confirmDate.css' %}"
+                  rel="stylesheet"
+                  type="text/css"/>
+            <link href="{% static 'notify/css/select2-bootstrap4.min.css' %}"
+                  rel="stylesheet"
+                  type="text/css"/>
+            <link href="{% static 'notify/css/summernote.min.css' %}"
+                  rel="stylesheet"
+                  type="text/css"/>
+      </head>
+      <body>
+            <script src="{% static 'notify/js/jquery.js' %}"></script>
+            {% include "navigation.html" %}
+            <script src="{% static 'notify/js/flatpickr.js' %}" type="text/javascript"></script>
+            <script src="{% static 'notify/js/flatpickr-confirmDate.js' %}"
+                    type="text/javascript"></script>
+            <script src="{% static 'notify/js/bootstrap.bundle.min.js' %}"
+                    type="text/javascript"></script>
+            <script src="{% static 'notify/js/select2.min.js' %}" type="text/javascript"></script>
+            <script src="{% static 'notify/js/datatables.min.js' %}"
+                    type="text/javascript"></script>
+            <script src="{% static 'notify/js/jquery.quicksearch.js' %}"
+                    type="text/javascript"></script>
+            <script src="{% static 'notify/js/sweetalert2.min.js' %}"
+                    type="text/javascript"></script>
+            <script src="{% static 'notify/js/summernote.min.js' %}"
+                    type="text/javascript"></script>
+            <div class="container-fluid mb-5">
+                  {% block body %}
+                  {% endblock body %}
+            </div>
+            <script>
+                  $(function () {
+                        $('[data-toggle="tooltip"]').tooltip()
+                  })
+            </script>
+      </body>
+</html>

@@ -2,6 +2,7 @@ use crate::formatting::Formatable;
 
 use super::variable::parse_variable;
 use super::{argument::TagArgument, filter::parse_filter_chain};
+use winnow::combinator::separated;
 use winnow::{
     ascii::multispace0,
     combinator::{delimited, opt},
@@ -24,17 +25,19 @@ impl<'i> PartialEq for Tag<'i> {
 
 impl<'i> Tag<'i> {
     pub fn parse(input: &mut &'i str) -> PResult<Self> {
-        let tag = generic_tag((
+        let (tag_type, arguments) = generic_tag((
             parse_variable,
-            delimited(multispace0, opt('|'), multispace0),
-            parse_filter_chain,
+            separated(
+                0..,
+                delimited(multispace0, TagArgument::parse, multispace0),
+                ' ',
+            ),
         ))
         .parse_next(input)?;
 
         let tag = Self {
-            tag_type: tag.0,
-            arguments: vec![],
-            // arguments: tag.2,
+            tag_type,
+            arguments,
         };
         Ok(tag)
     }
@@ -42,7 +45,15 @@ impl<'i> Tag<'i> {
 
 impl<'i> Formatable for Tag<'i> {
     fn formatted(&self, _indent_level: usize) -> String {
-        format!("{:?}", self)
+        let mut formatted = String::new();
+        formatted.push_str("{% ");
+        formatted.push_str(self.tag_type);
+        for argument in &self.arguments {
+            formatted.push(' ');
+            formatted.push_str(&argument.formatted(0));
+        }
+        formatted.push_str(" %}");
+        formatted
     }
 }
 
@@ -51,9 +62,16 @@ impl<'i> Formatable for Tag<'i> {
 pub fn parse_individual_tag<'i>(input: &mut &'i str) -> PResult<Tag<'i>> {
     let tag = generic_tag(parse_variable).parse_next(input)?;
 
+    let arguments = separated(
+        0..,
+        delimited(multispace0, TagArgument::parse, multispace0),
+        ' ',
+    )
+    .parse_next(input)?;
+
     let tag = Tag {
         tag_type: tag,
-        arguments: vec![],
+        arguments,
     };
     Ok(tag)
 }
@@ -67,10 +85,16 @@ pub fn parse_specific_tag<'i>(input: &mut &'i str, tag_name: &str) -> PResult<Ta
     ))
     .parse_next(input)?;
 
+    let arguments = separated(
+        0..,
+        delimited(multispace0, TagArgument::parse, multispace0),
+        ' ',
+    )
+    .parse_next(input)?;
+
     let tag = Tag {
         tag_type: tag.0,
-        arguments: vec![],
-        // arguments: tag.2,
+        arguments,
     };
     Ok(tag)
 }
@@ -87,6 +111,8 @@ mod tests {
     use pretty_assertions::assert_eq;
     use rstest::rstest;
 
+    use crate::template_parser::{argument::TagArgumentValue, text::SingleLineTextString};
+
     use super::*;
 
     #[rstest]
@@ -96,9 +122,15 @@ mod tests {
     #[case::no_argument_with_spaces("{% my_tag %}", Tag {
         tag_type: "my_tag", arguments: vec![]
     })]
-    // #[case::single_argument_with_spaces("{% my_tag \"my_arg\" %}", Tag {
-    //     tag_type: "my_tag", arguments: vec!["my_arg"]
-    // })]
+    #[case::single_argument_with_spaces("{% my_tag \"my_arg\" %}", Tag {
+        tag_type: "my_tag", arguments: vec![TagArgument {
+            value: TagArgumentValue::Text(SingleLineTextString {
+                value: "my_arg",
+                startquote_char: '"',
+            }),
+            filters: vec![],
+        }]
+    })]
     fn test_tag_pair_parsing(#[case] input: &str, #[case] expected: Tag) {
         let actual = Tag::parse.parse(input).unwrap();
         assert_eq!(actual, expected)
@@ -112,7 +144,13 @@ mod tests {
         tag_type: "my_tag", arguments: vec![]
     })]
     // #[case::single_argument_with_spaces("{% my_tag \"my_arg\" %}", Tag {
-    //     tag_type: "my_tag", arguments: vec!["my_arg"]
+    //     tag_type: "my_tag", arguments: vec![TagArgument {
+    //         value: TagArgumentValue::Text(SingleLineTextString {
+    //             value: "my_arg",
+    //             startquote_char: '"',
+    //         }),
+    //         filters: vec![],
+    //     }]
     // })]
     fn test_parse_individual_tag(#[case] input: &str, #[case] expected: Tag) {
         let actual = parse_individual_tag.parse(input).unwrap();

@@ -50,7 +50,7 @@ impl<'i> PartialEq for VariableTag<'i> {
 impl<'i> VariableTag<'i> {
     pub fn parse(input: &mut &'i str) -> PResult<Self> {
         let tag = delimited(
-            delimited(multispace0, "{{", multispace0),
+            ("{{", multispace0),
             (
                 parse_variable,
                 (
@@ -58,7 +58,7 @@ impl<'i> VariableTag<'i> {
                     parse_filter_chain,
                 ),
             ),
-            delimited(multispace0, "}}", multispace0),
+            (multispace0, "}}"),
         )
         .parse_next(input)?;
         let tag = Self {

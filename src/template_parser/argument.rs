@@ -127,4 +127,11 @@ mod tests {
         let actual = TagArgument::parse.parse(input).unwrap();
         assert_eq!(actual, expected)
     }
+
+    #[rstest]
+    #[case(TagArgumentValue::Variable("my_var"), "my_var")]
+    fn test_formatting_tag_argument_value(#[case] input: TagArgumentValue, #[case] expected: &str) {
+        let actual = input.formatted(0);
+        assert_eq!(actual, expected)
+    }
 }
