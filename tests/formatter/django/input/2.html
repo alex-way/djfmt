@@ -46,24 +46,29 @@
       </head>
       <body>
             <script src="{% static 'notify/js/jquery.js' %}"></script>
-            {% include "navigation.html" %}
+            {%include"navigation.html"%}
             <script src="{% static 'notify/js/flatpickr.js' %}" type="text/javascript"></script>
             <script src="{% static 'notify/js/flatpickr-confirmDate.js' %}"
                     type="text/javascript"></script>
             <script src="{% static 'notify/js/bootstrap.bundle.min.js' %}"
                     type="text/javascript"></script>
-            <script src="{% static 'notify/js/select2.min.js' %}" type="text/javascript"></script>
-            <script src="{% static 'notify/js/datatables.min.js' %}"
+            <script src="{%static'notify/js/select2.min.js' %}" type="text/javascript"></script>
+            <script src="{% static
+
+                  'notify/js/datatables.min.js' %}"
                     type="text/javascript"></script>
-            <script src="{% static 'notify/js/jquery.quicksearch.js' %}"
+            <script src="{% static
+
+
+                  'notify/js/jquery.quicksearch.js' %}"
                     type="text/javascript"></script>
             <script src="{% static 'notify/js/sweetalert2.min.js' %}"
                     type="text/javascript"></script>
             <script src="{% static 'notify/js/summernote.min.js' %}"
                     type="text/javascript"></script>
             <div class="container-fluid mb-5">
-                  {% block body %}
-                  {% endblock body %}
+                  {%block body%}
+                  {%endblock body%}
             </div>
             <script>
                   $(function () {
