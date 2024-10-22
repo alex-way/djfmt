@@ -1,3 +1,4 @@
+use crate::formatting::Formatable;
 use winnow::combinator::delimited;
 use winnow::error::ParserError;
 use winnow::token::take_while;
@@ -8,8 +9,6 @@ use winnow::{
     token::take_until,
     PResult, Parser,
 };
-
-use crate::formatting::Formatable;
 
 /// Parses all non-template syntax text
 pub fn parse_text<'i>(input: &mut &'i str) -> PResult<&'i str> {
