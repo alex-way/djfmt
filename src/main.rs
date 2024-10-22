@@ -49,7 +49,9 @@ fn main() {
         format_file(&args.path);
         return;
     }
-    let files = glob(&args.path.to_string_lossy())
+
+    let glob_path = format!("{}/**/*.html", args.path.to_string_lossy());
+    let files = glob(&glob_path)
         .unwrap()
         .filter_map(|entry| {
             let entry = entry.unwrap();
