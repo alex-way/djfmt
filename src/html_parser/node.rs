@@ -42,6 +42,15 @@ impl<'i> Formatable for Node<'i> {
     }
 }
 
+pub fn parse_child_nodes<'i>(input: &mut &'i str) -> PResult<Vec<Node<'i>>> {
+    let mut nodes = vec![];
+    while !input.is_empty() {
+        let node = Node::parse.parse_next(input)?;
+        nodes.push(node);
+    }
+    Ok(nodes)
+}
+
 #[cfg(test)]
 mod tests {
     use crate::html_parser::{attribute::Attributes, element::ElementVariant};
@@ -69,6 +78,63 @@ mod tests {
     }))]
     fn test_node_parses_successfully(#[case] input: &str, #[case] expected: Node) {
         let actual = Node::parse.parse(input).unwrap();
+        assert_eq!(actual, expected);
+    }
+
+    #[rstest]
+    #[case("<div/>", vec![Node::Element(Element {
+        id: None,
+        name: "div",
+        variant: ElementVariant::Void,
+        attributes: Attributes::default(),
+        classes: vec![],
+        children: vec![],
+    })])]
+    #[case("<div></div>", vec![Node::Element(Element {
+        id: None,
+        name: "div",
+        variant: ElementVariant::Normal,
+        attributes: Attributes::default(),
+        classes: vec![],
+        children: vec![],
+    })])]
+    #[case("<div></div><div></div>", vec![
+        Node::Element(Element {
+            id: None,
+            name: "div",
+            variant: ElementVariant::Normal,
+            attributes: Attributes::default(),
+            classes: vec![],
+            children: vec![],
+        }),
+        Node::Element(Element {
+            id: None,
+            name: "div",
+            variant: ElementVariant::Normal,
+            attributes: Attributes::default(),
+            classes: vec![],
+            children: vec![],
+        }),
+    ])]
+    #[case("<div><img /></div>", vec![Node::Element(Element {
+        id: None,
+        name: "div",
+        variant: ElementVariant::Normal,
+        attributes: Attributes::default(),
+        classes: vec![],
+        children: vec![
+            Node::Element(Element {
+                id: None,
+                name: "img",
+                variant: ElementVariant::Void,
+                attributes: Attributes::default(),
+                classes: vec![],
+                children: vec![],
+            }),
+        ],
+    })])]
+    fn test_parse_child_nodes(#[case] input: &str, #[case] expected: Vec<Node>) {
+        let actual = parse_child_nodes.parse(input).unwrap();
         assert_eq!(actual, expected);
     }
 }

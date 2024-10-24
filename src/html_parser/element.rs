@@ -1,6 +1,13 @@
-use super::{attribute::Attributes, node::Node, tag::Tag};
-use crate::formatting::Formatable;
-use winnow::{PResult, Parser};
+use super::{
+    attribute::Attributes,
+    node::{parse_child_nodes, Node},
+    tag::Tag,
+};
+use crate::{formatting::Formatable, html_parser::tag::ClosingTag};
+use winnow::{
+    error::{ErrMode, ErrorKind, ParserError},
+    PResult, Parser,
+};
 
 #[derive(Debug, PartialEq)]
 pub enum ElementVariant {
@@ -20,24 +27,52 @@ pub struct Element<'i> {
 
 impl<'i> Element<'i> {
     pub fn parse(input: &mut &'i str) -> PResult<Self> {
-        let opening_tag = Tag::parse.parse_next(input)?;
-        let mut children = vec![];
+        let mut opening_tag = Tag::parse.parse_next(input)?;
 
-        while !input.is_empty() {
-            let node = Node::parse.parse_next(input);
+        let id = opening_tag.attributes.pop("id");
+        let classes_attr = opening_tag.attributes.pop("class");
 
-            match node {
-                Ok(node) => children.push(node),
-                _ => break,
-            }
+        let mut classes = vec![];
+        if let Some(classes_attr) = classes_attr {
+            classes.extend(classes_attr.split(' '));
         }
 
+        if opening_tag.variant == ElementVariant::Void {
+            return Ok(Self {
+                id,
+                name: opening_tag.name,
+                variant: ElementVariant::Void,
+                attributes: opening_tag.attributes,
+                classes,
+                children: vec![],
+            });
+        }
+
+        let closing_tag = ClosingTag::parse.parse_next(input)?;
+
+        if opening_tag.name != closing_tag.name {
+            return Err(ErrMode::from_error_kind(input, ErrorKind::Verify));
+        }
+
+        if opening_tag.name == closing_tag.name {
+            return Ok(Self {
+                id,
+                name: opening_tag.name,
+                variant: ElementVariant::Normal,
+                attributes: opening_tag.attributes,
+                classes,
+                children: vec![],
+            });
+        }
+
+        let children = parse_child_nodes.parse_next(input)?;
+
         Ok(Self {
-            id: None,
+            id,
             name: opening_tag.name,
             variant: ElementVariant::Normal,
             attributes: opening_tag.attributes,
-            classes: vec![],
+            classes,
             children,
         })
     }
@@ -118,6 +153,14 @@ mod tests {
     #[rstest]
     #[case("<div></div>", Element {
         id: None,
+        name: "div",
+        variant: ElementVariant::Normal,
+        attributes: Attributes::default(),
+        classes: vec![],
+        children: vec![],
+    })]
+    #[case("<div id=\"my-id\"></div>", Element {
+        id: Some("my-id"),
         name: "div",
         variant: ElementVariant::Normal,
         attributes: Attributes::default(),

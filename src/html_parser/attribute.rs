@@ -79,11 +79,28 @@ impl<'i> Attributes<'i> {
         let kvs = separated(0.., parse_attribute, multispace1).parse_next(input)?;
         Ok(Self { kvs })
     }
+
     pub fn iter(&self) -> impl Iterator<Item = (&'i str, &Option<&'i str>)> {
         self.kvs.iter().map(|(&k, v)| (k, v))
     }
+
     pub fn insert(&mut self, key: &'i str, value: Option<&'i str>) {
         self.kvs.insert(key, value);
+    }
+
+    pub fn get(&self, key: &'i str) -> Option<&'i str> {
+        let value = self.kvs.get(key)?;
+        if let Some(value) = value {
+            return Some(value);
+        }
+        None
+    }
+    pub fn pop(&mut self, key: &'i str) -> Option<&'i str> {
+        let value = self.kvs.remove(key)?;
+        if let Some(value) = value {
+            return Some(value);
+        }
+        None
     }
 }
 
