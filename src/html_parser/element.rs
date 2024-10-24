@@ -1,6 +1,5 @@
-use super::{node::Node, tag::Tag};
+use super::{attribute::Attributes, node::Node, tag::Tag};
 use crate::formatting::Formatable;
-use std::collections::HashMap;
 use winnow::{PResult, Parser};
 
 #[derive(Debug, PartialEq)]
@@ -14,7 +13,7 @@ pub struct Element<'i> {
     pub id: Option<&'i str>,
     pub name: &'i str,
     pub variant: ElementVariant,
-    pub attributes: HashMap<&'i str, Option<&'i str>>,
+    pub attributes: Attributes<'i>,
     pub classes: Vec<&'i str>,
     pub children: Vec<Node<'i>>,
 }
@@ -37,7 +36,7 @@ impl<'i> Element<'i> {
             id: None,
             name: opening_tag.name,
             variant: ElementVariant::Normal,
-            attributes: opening_tag.attributes.kvs,
+            attributes: opening_tag.attributes,
             classes: vec![],
             children,
         })
@@ -67,7 +66,7 @@ impl<'i> Formatable for Element<'i> {
         }
 
         // Add the attributes if they exist
-        for (key, val) in &self.attributes {
+        for (key, val) in self.attributes.iter() {
             html.push(' ');
             html.push_str(key);
             if let Some(val) = val {
@@ -117,11 +116,25 @@ mod tests {
     use super::*;
 
     #[rstest]
+    #[case("<div></div>", Element {
+        id: None,
+        name: "div",
+        variant: ElementVariant::Normal,
+        attributes: Attributes::default(),
+        classes: vec![],
+        children: vec![],
+    })]
+    fn test_element_parses_successfully(#[case] input: &str, #[case] expected: Element) {
+        let actual = Element::parse.parse(input).unwrap();
+        assert_eq!(actual, expected);
+    }
+
+    #[rstest]
     #[case(Element {
         id: None,
         name: "div",
         variant: ElementVariant::Normal,
-        attributes: HashMap::new(),
+        attributes: Attributes::default(),
         classes: vec![],
         children: vec![],
     }, "<div></div>\n")]
@@ -129,7 +142,7 @@ mod tests {
         id: Some("my-id"),
         name: "div",
         variant: ElementVariant::Normal,
-        attributes: HashMap::new(),
+        attributes: Attributes::default(),
         classes: vec![],
         children: vec![],
     }, "<div id=\"my-id\"></div>\n")]
@@ -137,7 +150,7 @@ mod tests {
         id: None,
         name: "div",
         variant: ElementVariant::Normal,
-        attributes: HashMap::new(),
+        attributes: Attributes::default(),
         classes: vec!["my-class"],
         children: vec![],
     }, "<div class=\"my-class\"></div>\n")]
@@ -145,7 +158,7 @@ mod tests {
         id: None,
         name: "div",
         variant: ElementVariant::Normal,
-        attributes: HashMap::new(),
+        attributes: Attributes::default(),
         classes: vec!["my-class", "my-other-class"],
         children: vec![],
     }, "<div class=\"my-class my-other-class\"></div>\n")]
@@ -153,7 +166,7 @@ mod tests {
         id: None,
         name: "div",
         variant: ElementVariant::Normal,
-        attributes: HashMap::new(),
+        attributes: Attributes::default(),
         classes: vec![],
         children: vec![Node::Text("hello there")],
     }, "<div>\n\thello there\n</div>\n")]
@@ -161,13 +174,13 @@ mod tests {
         id: Some("my-id"),
         name: "div",
         variant: ElementVariant::Normal,
-        attributes: HashMap::new(),
+        attributes: Attributes::default(),
         classes: vec!["my-class"],
         children: vec![Node::Element(Element {
             id: None,
             name: "div",
             variant: ElementVariant::Normal,
-            attributes: HashMap::new(),
+            attributes: Attributes::default(),
             classes: vec![],
             children: vec![],
         })],
@@ -179,7 +192,7 @@ mod tests {
 
     #[rstest]
     fn test_element_format_kitchen_sink() {
-        let mut attributes: HashMap<&str, Option<&str>> = HashMap::new();
+        let mut attributes = Attributes::default();
         attributes.insert("width", Some("40"));
 
         let element = Element {
@@ -193,7 +206,7 @@ mod tests {
                     id: None,
                     name: "div",
                     variant: ElementVariant::Normal,
-                    attributes: HashMap::new(),
+                    attributes: Attributes::default(),
                     classes: vec![],
                     children: vec![],
                 }),

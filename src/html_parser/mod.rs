@@ -1,5 +1,4 @@
 use crate::formatting::Formatable;
-use std::hash::BuildHasher;
 use tag::{ClosingTag, Tag};
 use winnow::{combinator::repeat, PResult, Parser};
 
@@ -11,16 +10,13 @@ mod tag;
 mod text;
 
 #[derive(Debug)]
-pub struct Element<'i, S> {
-    opening_tag: Tag<'i, S>,
+pub struct Element<'i> {
+    opening_tag: Tag<'i>,
     closing_tag: ClosingTag<'i>,
-    children: Vec<Element<'i, S>>,
+    children: Vec<Element<'i>>,
 }
 
-impl<'i, S> PartialEq for Element<'i, S>
-where
-    S: BuildHasher + Default,
-{
+impl<'i> PartialEq for Element<'i> {
     fn eq(&self, other: &Self) -> bool {
         self.opening_tag == other.opening_tag
             && self.closing_tag == other.closing_tag
@@ -28,10 +24,7 @@ where
     }
 }
 
-impl<'i, S> Element<'i, S>
-where
-    S: BuildHasher + Default,
-{
+impl<'i> Element<'i> {
     pub fn parse(input: &mut &'i str) -> PResult<Self> {
         let element =
             (Tag::parse, repeat(0.., Element::parse), ClosingTag::parse).parse_next(input)?;
@@ -45,10 +38,7 @@ where
     }
 }
 
-impl<'i, S> Formatable for Element<'i, S>
-where
-    S: BuildHasher + Default,
-{
+impl<'i> Formatable for Element<'i> {
     fn formatted(&self, indent_level: usize) -> String {
         let mut html = String::new();
 
@@ -85,14 +75,13 @@ mod tests {
     use element::ElementVariant;
     use pretty_assertions::assert_eq;
     use rstest::rstest;
-    use std::collections::hash_map::RandomState;
 
     use super::*;
 
     #[rstest]
     fn test_simple_element() {
         let input = r#"<div></div>"#;
-        let expected = Element::<RandomState> {
+        let expected = Element {
             opening_tag: Tag {
                 name: "div",
                 variant: ElementVariant::Normal,
@@ -108,14 +97,14 @@ mod tests {
     #[rstest]
     fn test_nested_element() {
         let input = r#"<div><div height="30"></div></div>"#;
-        let expected = Element::<RandomState> {
+        let expected = Element {
             opening_tag: Tag {
                 name: "div",
                 variant: ElementVariant::Normal,
                 attributes: Attributes::default(),
             },
             closing_tag: ClosingTag { name: "div" },
-            children: vec![Element::<RandomState> {
+            children: vec![Element {
                 opening_tag: Tag {
                     name: "div",
                     variant: ElementVariant::Normal,
@@ -133,7 +122,7 @@ mod tests {
 
     #[rstest]
     fn test_nested_element_format() {
-        let input = Element::<RandomState> {
+        let input = Element {
             opening_tag: Tag {
                 name: "div",
                 variant: ElementVariant::Normal,
@@ -141,7 +130,7 @@ mod tests {
             },
             closing_tag: ClosingTag { name: "div" },
             children: vec![
-                Element::<RandomState> {
+                Element {
                     opening_tag: Tag {
                         name: "div",
                         variant: ElementVariant::Normal,
@@ -152,7 +141,7 @@ mod tests {
                     closing_tag: ClosingTag { name: "div" },
                     children: vec![],
                 },
-                Element::<RandomState> {
+                Element {
                     opening_tag: Tag {
                         name: "div",
                         variant: ElementVariant::Normal,

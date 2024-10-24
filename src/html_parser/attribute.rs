@@ -1,4 +1,5 @@
-use std::{collections::HashMap, hash::BuildHasher};
+use std::collections::HashMap;
+use std::iter::Iterator;
 use winnow::{
     ascii::{multispace0, multispace1},
     combinator::{alt, delimited, opt, separated, separated_pair},
@@ -56,36 +57,33 @@ fn parse_attribute<'i>(input: &mut &'i str) -> PResult<(&'i str, Option<&'i str>
 
 /// HTML attributes
 #[derive(Debug)]
-pub struct Attributes<'i, S> {
-    pub kvs: HashMap<&'i str, Option<&'i str>, S>,
+pub struct Attributes<'i> {
+    pub kvs: HashMap<&'i str, Option<&'i str>>,
 }
 
-impl<'i, S> Default for Attributes<'i, S>
-where
-    S: BuildHasher + Default,
-{
+impl<'i> Default for Attributes<'i> {
     fn default() -> Self {
-        let kvs: HashMap<&'i str, Option<&'i str>, S> = HashMap::default();
+        let kvs: HashMap<&'i str, Option<&'i str>> = HashMap::default();
         Attributes { kvs }
     }
 }
 
-impl<'i, S> PartialEq for Attributes<'i, S>
-where
-    S: BuildHasher,
-{
+impl<'i> PartialEq for Attributes<'i> {
     fn eq(&self, other: &Self) -> bool {
         self.kvs == other.kvs
     }
 }
 
-impl<'i, S> Attributes<'i, S>
-where
-    S: BuildHasher + Default,
-{
+impl<'i> Attributes<'i> {
     pub fn parse(input: &mut &'i str) -> PResult<Self> {
         let kvs = separated(0.., parse_attribute, multispace1).parse_next(input)?;
         Ok(Self { kvs })
+    }
+    pub fn iter(&self) -> impl Iterator<Item = (&'i str, &Option<&'i str>)> {
+        self.kvs.iter().map(|(&k, v)| (k, v))
+    }
+    pub fn insert(&mut self, key: &'i str, value: Option<&'i str>) {
+        self.kvs.insert(key, value);
     }
 }
 
@@ -93,7 +91,6 @@ where
 mod tests {
     use pretty_assertions::assert_eq;
     use rstest::rstest;
-    use std::collections::hash_map::RandomState;
 
     use super::*;
 
@@ -170,8 +167,8 @@ mod tests {
             .into_iter()
             .collect(),
     })]
-    fn test_attributes(#[case] input: &str, #[case] expected: Attributes<RandomState>) {
-        let actual = Attributes::<RandomState>::parse.parse(input).unwrap();
+    fn test_attributes(#[case] input: &str, #[case] expected: Attributes) {
+        let actual = Attributes::parse.parse(input).unwrap();
         assert_eq!(actual, expected)
     }
 }

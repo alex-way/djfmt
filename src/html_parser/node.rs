@@ -44,10 +44,9 @@ impl<'i> Formatable for Node<'i> {
 
 #[cfg(test)]
 mod tests {
-    use crate::html_parser::element::ElementVariant;
+    use crate::html_parser::{attribute::Attributes, element::ElementVariant};
     use pretty_assertions::assert_eq;
     use rstest::rstest;
-    use std::collections::HashMap;
 
     use super::*;
 
@@ -64,7 +63,7 @@ mod tests {
         id: None,
         name: "div",
         variant: ElementVariant::Normal,
-        attributes: HashMap::new(),
+        attributes: Attributes::default(),
         classes: vec![],
         children: vec![],
     }))]

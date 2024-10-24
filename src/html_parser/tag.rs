@@ -1,6 +1,5 @@
 use crate::formatting::Formatable;
 use crate::html_parser::attribute::Attributes;
-use std::hash::BuildHasher;
 use winnow::{
     ascii::{alpha1, multispace0},
     combinator::{delimited, opt},
@@ -15,17 +14,14 @@ pub fn parse_tag_name<'i>(input: &mut &'i str) -> PResult<&'i str> {
 
 /// An HTML open tag, like `<a href="google.com">`.
 #[derive(Debug)]
-pub struct Tag<'i, S> {
+pub struct Tag<'i> {
     /// Like 'div'
     pub name: &'i str,
-    pub attributes: Attributes<'i, S>,
+    pub attributes: Attributes<'i>,
     pub variant: ElementVariant,
 }
 
-impl<'i, S> PartialEq for Tag<'i, S>
-where
-    S: BuildHasher,
-{
+impl<'i> PartialEq for Tag<'i> {
     fn eq(&self, other: &Self) -> bool {
         self.name == other.name
             && self.attributes == other.attributes
@@ -33,10 +29,7 @@ where
     }
 }
 
-impl<'i, S> Tag<'i, S>
-where
-    S: BuildHasher + Default,
-{
+impl<'i> Tag<'i> {
     pub fn parse(input: &mut &'i str) -> PResult<Self> {
         let (name, attributes, variant) = delimited(
             ('<', multispace0),
@@ -60,7 +53,7 @@ where
     }
 }
 
-impl<'i, S> Formatable for Tag<'i, S> {
+impl<'i> Formatable for Tag<'i> {
     fn formatted(&self, _indent_level: usize) -> String {
         let mut html = String::new();
         html.push('<');
@@ -105,7 +98,6 @@ impl<'i> Formatable for ClosingTag<'i> {
 mod tests {
     use pretty_assertions::assert_eq;
     use rstest::rstest;
-    use std::collections::hash_map::RandomState;
 
     use super::*;
 
@@ -119,14 +111,14 @@ mod tests {
                 kvs: [("href", Some("https://google.com"))].into_iter().collect(),
             },
         };
-        let actual = Tag::<RandomState>::parse.parse(input).unwrap();
+        let actual = Tag::parse.parse(input).unwrap();
         assert_eq!(expected, actual);
     }
 
     #[rstest]
     fn test_tag() {
         let input = r#"<div width="40" height="30">"#;
-        let expected = Tag::<RandomState> {
+        let expected = Tag {
             name: "div",
             variant: ElementVariant::Normal,
             attributes: Attributes {
@@ -142,7 +134,7 @@ mod tests {
     #[rstest]
     fn test_self_closing_tag() {
         let input = r#"<div width="40" height="30"/>"#;
-        let expected = Tag::<RandomState> {
+        let expected = Tag {
             name: "div",
             variant: ElementVariant::Void,
             attributes: Attributes {
@@ -158,7 +150,7 @@ mod tests {
     #[rstest]
     fn test_self_closing_tag_with_spaces() {
         let input = r#"<div width="40" height="30" />"#;
-        let expected = Tag::<RandomState> {
+        let expected = Tag {
             name: "div",
             variant: ElementVariant::Void,
             attributes: Attributes {
