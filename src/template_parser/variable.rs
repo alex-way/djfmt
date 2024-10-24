@@ -1,6 +1,5 @@
-use crate::formatting::Formatable;
-
 use super::filter::{parse_filter_chain, Filter};
+use crate::formatting::Formatable;
 use winnow::combinator::peek;
 use winnow::token::take;
 use winnow::{

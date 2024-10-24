@@ -1,9 +1,8 @@
+use crate::formatting::Formatable;
 use comment::Comment;
 use tag::Tag;
 use variable::VariableTag;
 use winnow::{PResult, Parser};
-
-use crate::formatting::Formatable;
 
 mod argument;
 mod comment;

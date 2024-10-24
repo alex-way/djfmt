@@ -1,5 +1,5 @@
 use clap::Parser as ClapParser;
-use djfmt::{formatting::Formatable, template_parser::Template};
+use djfmt::{formatting::Formatable, html_parser::node::Node, template_parser::Template};
 use glob::glob;
 use rayon::prelude::*;
 use std::{
@@ -26,8 +26,27 @@ fn format_file(path: &PathBuf) {
     let mut contents = String::new();
     file.read_to_string(&mut contents).unwrap();
 
-    // let parsed = Element::<RandomState>::parse.parse(&contents).unwrap();
     let parsed = Template::parse(&mut contents.as_str()).unwrap();
+    let formatted = parsed.formatted(0);
+
+    file.set_len(0).unwrap();
+    file.seek(SeekFrom::Start(0)).unwrap();
+
+    file.write_all(formatted.as_bytes()).unwrap();
+    file.flush().unwrap();
+}
+
+fn format_html_contents(path: &PathBuf) {
+    let mut file = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .open(path)
+        .unwrap();
+
+    let mut contents = String::new();
+    file.read_to_string(&mut contents).unwrap();
+
+    let parsed = Node::parse(&mut contents.as_str()).unwrap();
     let formatted = parsed.formatted(0);
 
     file.set_len(0).unwrap();
@@ -46,6 +65,7 @@ fn main() {
     }
 
     if args.path.is_file() {
+        format_html_contents(&args.path);
         format_file(&args.path);
         return;
     }
