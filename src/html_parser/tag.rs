@@ -1,15 +1,19 @@
 use crate::formatting::Formatable;
 use crate::html_parser::attribute::Attributes;
 use winnow::{
-    ascii::{alpha1, multispace0},
+    ascii::multispace0,
     combinator::{delimited, opt},
+    token::take_while,
     PResult, Parser,
 };
 
 use super::element::ElementVariant;
 
 pub fn parse_tag_name<'i>(input: &mut &'i str) -> PResult<&'i str> {
-    alpha1.parse_next(input)
+    take_while(1.., |c: char| {
+        c.is_ascii() && c != '/' && c != '>' && c != ' '
+    })
+    .parse_next(input)
 }
 
 /// An HTML open tag, like `<a href="google.com">`.
@@ -31,7 +35,7 @@ impl<'i> PartialEq for Tag<'i> {
 
 impl<'i> Tag<'i> {
     pub fn parse(input: &mut &'i str) -> PResult<Self> {
-        let (name, attributes, variant) = delimited(
+        let mut parser = delimited(
             ('<', multispace0),
             (
                 parse_tag_name,
@@ -39,17 +43,20 @@ impl<'i> Tag<'i> {
                 opt('/'),
             ),
             (multispace0, '>'),
-        )
-        .parse_next(input)?;
+        );
 
-        Ok(Self {
-            name,
-            attributes,
-            variant: match variant {
-                Some(_) => ElementVariant::Void,
-                None => ElementVariant::Normal,
-            },
-        })
+        parser.parse_peek(input)?;
+
+        parser
+            .map(|(name, attributes, variant)| Self {
+                name,
+                attributes,
+                variant: match variant {
+                    Some(_) => ElementVariant::Void,
+                    None => ElementVariant::Normal,
+                },
+            })
+            .parse_next(input)
     }
 }
 
@@ -171,5 +178,23 @@ mod tests {
     fn test_closing_tag(#[case] input: &str, #[case] expected: ClosingTag) {
         let actual = ClosingTag::parse.parse(input).unwrap();
         assert_eq!(expected, actual);
+    }
+
+    #[rstest]
+    #[case("</div>", "</div>")]
+    fn test_tag_doesnt_consume_input(#[case] input: &str, #[case] expected: &str) {
+        let mut input = input;
+
+        let _ = Tag::parse.parse_next(&mut input);
+
+        assert_eq!(input, expected);
+    }
+
+    #[rstest]
+    #[case("div")]
+    #[case("my-div")]
+    fn test_parse_tag_name(#[case] input: &str) {
+        let actual = parse_tag_name.parse(input).unwrap();
+        assert_eq!(actual, input);
     }
 }

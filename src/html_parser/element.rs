@@ -48,24 +48,32 @@ impl<'i> Element<'i> {
             });
         }
 
+        let closing_tag_peek = ClosingTag::parse.parse_peek(input);
+
+        if closing_tag_peek.is_ok() {
+            let closing_tag = ClosingTag::parse.parse_next(input)?;
+
+            if opening_tag.name != closing_tag.name {
+                return Err(ErrMode::from_error_kind(input, ErrorKind::Verify));
+            } else if opening_tag.name == closing_tag.name {
+                return Ok(Self {
+                    id,
+                    name: opening_tag.name,
+                    variant: ElementVariant::Normal,
+                    attributes: opening_tag.attributes,
+                    classes,
+                    children: vec![],
+                });
+            }
+        }
+
+        let children = parse_child_nodes.parse_next(input)?;
+
         let closing_tag = ClosingTag::parse.parse_next(input)?;
 
         if opening_tag.name != closing_tag.name {
             return Err(ErrMode::from_error_kind(input, ErrorKind::Verify));
         }
-
-        if opening_tag.name == closing_tag.name {
-            return Ok(Self {
-                id,
-                name: opening_tag.name,
-                variant: ElementVariant::Normal,
-                attributes: opening_tag.attributes,
-                classes,
-                children: vec![],
-            });
-        }
-
-        let children = parse_child_nodes.parse_next(input)?;
 
         Ok(Self {
             id,
@@ -117,7 +125,7 @@ impl<'i> Formatable for Element<'i> {
                 html.push('>');
             }
             ElementVariant::Void => {
-                html.push_str(" />");
+                html.push_str(" />\n");
                 return html;
             }
         }
@@ -136,8 +144,7 @@ impl<'i> Formatable for Element<'i> {
         }
 
         // Add the closing tag with the current indentation
-        html.push_str(&format!("{}</{}>", indent, self.name));
-        html.push('\n');
+        html.push_str(&format!("{}</{}>\n", indent, self.name));
 
         html
     }
@@ -260,5 +267,28 @@ mod tests {
             "<div id=\"my-id\" class=\"my-class\" width=\"40\">\n\t<div></div>\n\t<!-- my comment -->\n</div>\n";
         let actual = element.formatted(0);
         assert_eq!(actual, expected);
+    }
+
+    #[rstest]
+    #[case("<div></div>", Ok(Element {
+        id: None,
+        name: "div",
+        variant: ElementVariant::Normal,
+        attributes: Attributes::default(),
+        classes: vec![],
+        children: vec![],
+    }), "")]
+    #[case("</div>", Err(ErrMode::from_error_kind(&"", ErrorKind::Verify)), "</div>")]
+    fn test_element_doesnt_consume_input_after_closing_tag(
+        #[case] input: &str,
+        #[case] expected_extracted: PResult<Element>,
+        #[case] expected_remaining: &str,
+    ) {
+        let mut input = input;
+
+        let actual = Element::parse.parse_next(&mut input);
+
+        assert_eq!(actual, expected_extracted);
+        assert_eq!(input, expected_remaining);
     }
 }
