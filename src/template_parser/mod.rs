@@ -122,4 +122,18 @@ mod tests {
         let actual = Template::parse.parse(input).unwrap();
         assert_eq!(actual, expected)
     }
+
+    #[rstest]
+    fn test_formatting_multiple_times_doesnt_change_output() {
+        let expected = "<div></div>";
+        let parsed = Template::parse.parse(expected).unwrap();
+
+        let first_format = parsed.formatted(0);
+        assert_eq!(expected, first_format);
+
+        let second_parse = Template::parse.parse(first_format.as_str()).unwrap();
+
+        let second_format = second_parse.formatted(0);
+        assert_eq!(expected, second_format);
+    }
 }

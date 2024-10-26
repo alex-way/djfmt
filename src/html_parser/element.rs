@@ -125,7 +125,7 @@ impl<'i> Formatable for Element<'i> {
                 html.push('>');
             }
             ElementVariant::Void => {
-                html.push_str(" />\n");
+                html.push_str(" />");
                 return html;
             }
         }
@@ -144,7 +144,7 @@ impl<'i> Formatable for Element<'i> {
         }
 
         // Add the closing tag with the current indentation
-        html.push_str(&format!("{}</{}>\n", indent, self.name));
+        html.push_str(&format!("{}</{}>", indent, self.name));
 
         html
     }
@@ -187,7 +187,7 @@ mod tests {
         attributes: Attributes::default(),
         classes: vec![],
         children: vec![],
-    }, "<div></div>\n")]
+    }, "<div></div>")]
     #[case(Element {
         id: Some("my-id"),
         name: "div",
@@ -195,7 +195,7 @@ mod tests {
         attributes: Attributes::default(),
         classes: vec![],
         children: vec![],
-    }, "<div id=\"my-id\"></div>\n")]
+    }, "<div id=\"my-id\"></div>")]
     #[case(Element {
         id: None,
         name: "div",
@@ -203,7 +203,7 @@ mod tests {
         attributes: Attributes::default(),
         classes: vec!["my-class"],
         children: vec![],
-    }, "<div class=\"my-class\"></div>\n")]
+    }, "<div class=\"my-class\"></div>")]
     #[case(Element {
         id: None,
         name: "div",
@@ -211,7 +211,7 @@ mod tests {
         attributes: Attributes::default(),
         classes: vec!["my-class", "my-other-class"],
         children: vec![],
-    }, "<div class=\"my-class my-other-class\"></div>\n")]
+    }, "<div class=\"my-class my-other-class\"></div>")]
     #[case(Element {
         id: None,
         name: "div",
@@ -219,7 +219,7 @@ mod tests {
         attributes: Attributes::default(),
         classes: vec![],
         children: vec![Node::Text("hello there")],
-    }, "<div>\n\thello there\n</div>\n")]
+    }, "<div>\n\thello there\n</div>")]
     #[case(Element {
         id: Some("my-id"),
         name: "div",
@@ -234,7 +234,31 @@ mod tests {
             classes: vec![],
             children: vec![],
         })],
-    }, "<div id=\"my-id\" class=\"my-class\">\n\t<div></div>\n</div>\n")]
+    }, "<div id=\"my-id\" class=\"my-class\">\n\t<div></div>\n</div>")]
+    #[case(Element {
+        id: None,
+        name: "div",
+        variant: ElementVariant::Normal,
+        attributes: Attributes::default(),
+        classes: vec![],
+        children: vec![Node::Element(Element {
+            id: None,
+            name: "meta",
+            variant: ElementVariant::Void,
+            attributes: Attributes::default(),
+            classes: vec![],
+            children: vec![],
+        }),
+        Node::Element(Element {
+            id: None,
+            name: "title",
+            variant: ElementVariant::Normal,
+            attributes: Attributes::default(),
+            classes: vec![],
+            children: vec![],
+        })
+        ],
+    }, "<div>\n\t<meta />\n\t<title></title>\n</div>")]
     fn test_element_format(#[case] input: Element, #[case] expected: &str) {
         let actual = input.formatted(0);
         assert_eq!(actual, expected);
@@ -264,7 +288,7 @@ mod tests {
             ],
         };
         let expected =
-            "<div id=\"my-id\" class=\"my-class\" width=\"40\">\n\t<div></div>\n\t<!-- my comment -->\n</div>\n";
+            "<div id=\"my-id\" class=\"my-class\" width=\"40\">\n\t<div></div>\n\t<!-- my comment -->\n</div>";
         let actual = element.formatted(0);
         assert_eq!(actual, expected);
     }

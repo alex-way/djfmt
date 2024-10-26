@@ -1,4 +1,13 @@
+default:
+    just --list
+
+build-release:
+	cargo build --release
+
 benchmark:
-	hyperfine --warmup 3 -N 'djlint --quiet --reformat ./tests/formatter/django/expected/2.html' './target/release/djfmt ./tests/formatter/django/expected/2.html'
+	just build-release
+	hyperfine --warmup 3 -N -i 'djlint --quiet --check ./tests/formatter/django/input/2.html' './target/release/djfmt ./tests/formatter/django/input/2.html'
+
 benchmark-dir:
-	hyperfine --warmup 3 -N 'djlint --quiet --reformat ./tests/formatter/django/expected' './target/release/djfmt ./tests/formatter/django/expected'
+	just build-release
+	hyperfine --warmup 3 -N -i 'djlint --quiet --check ./tests/formatter/django/input' './target/release/djfmt ./tests/formatter/django/input'

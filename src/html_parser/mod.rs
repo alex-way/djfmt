@@ -26,15 +26,14 @@ impl<'i> PartialEq for Element<'i> {
 
 impl<'i> Element<'i> {
     pub fn parse(input: &mut &'i str) -> PResult<Self> {
-        let element =
+        let (opening_tag, children, closing_tag) =
             (Tag::parse, repeat(0.., Element::parse), ClosingTag::parse).parse_next(input)?;
-        let element = Self {
-            opening_tag: element.0,
-            closing_tag: element.2,
-            children: element.1,
-        };
 
-        Ok(element)
+        Ok(Self {
+            opening_tag,
+            closing_tag,
+            children,
+        })
     }
 }
 
@@ -55,6 +54,7 @@ impl<'i> Formatable for Element<'i> {
         // Add each child, increasing the indentation for each child
         for child in &self.children {
             html.push_str(&child.formatted(indent_level + 1)); // Recursively increase the indentation
+            html.push('\n');
         }
 
         if self.children.is_empty() {
@@ -63,7 +63,6 @@ impl<'i> Formatable for Element<'i> {
 
         // Add the closing tag with the current indentation
         html.push_str(&format!("{}{}", indent, self.closing_tag.formatted(0)));
-        html.push('\n');
 
         html
     }
@@ -155,7 +154,7 @@ mod tests {
             ],
         };
 
-        let expected = "<div>\n\t<div height=\"30\"></div>\n\t<div height=\"30\"></div>\n</div>\n";
+        let expected = "<div>\n\t<div height=\"30\"></div>\n\t<div height=\"30\"></div>\n</div>";
 
         let actual = input.formatted(0);
         assert_eq!(expected, actual);

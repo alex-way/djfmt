@@ -8,22 +8,40 @@ The goal is to provide a tool that can format Django templates in a consistent w
 
 ## Performance
 
-Initial tests suggest `djfmt` is ~150x faster than `djhtml` for formatting files on my Macbook M3 Pro:
+Initial tests suggest `djfmt` is ~215x faster than `djhtml` for formatting files on my Macbook M3 Pro:
 
 ```bash
-hyperfine --warmup 3 -N 'djlint --quiet --reformat ./tests/django' './target/release/djfmt ./tests/django'
+hyperfine --warmup 3 -N -i 'djlint --quiet --check ./tests/formatter/django/input/2.html' './target/release/djfmt ./tests/formatter/django/input/2.html'
 
 ###
 
-Benchmark 1: djlint --quiet --reformat ./tests/django
-  Time (mean ± σ):     231.2 ms ±   1.4 ms    [User: 471.0 ms, System: 60.6 ms]
-  Range (min … max):   229.1 ms … 234.0 ms    13 runs
+Benchmark 1: djlint --quiet --check ./tests/formatter/django/input/2.html
+  Time (mean ± σ):     245.4 ms ±   1.5 ms    [User: 191.7 ms, System: 15.9 ms]
+  Range (min … max):   243.7 ms … 248.1 ms    12 runs
 
-Benchmark 2: ./target/release/djfmt ./tests/django
-  Time (mean ± σ):       1.5 ms ±   0.3 ms    [User: 0.7 ms, System: 3.1 ms]
-  Range (min … max):     1.3 ms …   6.3 ms    1828 runs
+Benchmark 2: ./target/release/djfmt ./tests/formatter/django/input/2.html
+  Time (mean ± σ):       1.1 ms ±   0.1 ms    [User: 0.5 ms, System: 0.3 ms]
+  Range (min … max):     1.0 ms …   1.5 ms    2628 runs
 
 Summary
-  ./target/release/djfmt ./tests/django ran
-  152.68 ± 27.31 times faster than djlint --quiet --reformat ./tests/django
+  ./target/release/djfmt ./tests/formatter/django/input/2.html ran
+  218.17 ± 12.27 times faster than djlint --quiet --check ./tests/formatter/django/input/2.html
+```
+
+```bash
+hyperfine --warmup 3 -N -i 'djlint --quiet --check ./tests/formatter/django/input' './target/release/djfmt ./tests/formatter/django/input'
+
+###
+
+Benchmark 1: djlint --quiet --check ./tests/formatter/django/input
+  Time (mean ± σ):     319.9 ms ±   1.5 ms    [User: 352.6 ms, System: 37.3 ms]
+  Range (min … max):   317.6 ms … 321.7 ms    10 runs
+
+Benchmark 2: ./target/release/djfmt ./tests/formatter/django/input
+  Time (mean ± σ):       1.4 ms ±   0.3 ms    [User: 0.8 ms, System: 1.4 ms]
+  Range (min … max):     1.2 ms …   6.7 ms    2128 runs
+
+Summary
+  ./target/release/djfmt ./tests/formatter/django/input ran
+  235.31 ± 43.96 times faster than djlint --quiet --check ./tests/formatter/django/input
 ```

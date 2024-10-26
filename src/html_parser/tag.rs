@@ -102,8 +102,12 @@ pub struct ClosingTag<'i> {
 
 impl<'i> ClosingTag<'i> {
     pub fn parse(input: &mut &'i str) -> PResult<Self> {
-        let tag =
-            delimited(("</", multispace0), parse_tag_name, (multispace0, ">")).parse_next(input)?;
+        let tag = delimited(
+            (multispace0, "</", multispace0),
+            parse_tag_name,
+            (multispace0, ">", multispace0),
+        )
+        .parse_next(input)?;
 
         Ok(Self { name: tag })
     }

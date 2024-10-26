@@ -39,8 +39,15 @@ impl<'i> Formatable for Node<'i> {
     fn formatted(&self, indent_level: usize) -> String {
         let indent = "\t".repeat(indent_level);
         match self {
-            Node::Text(text) => format!("{indent}{text}\n"),
-            Node::Element(element) => element.formatted(indent_level),
+            Node::Text(text) => {
+                // Don't include empty text nodes
+                let trimmed = text.trim();
+                if trimmed.is_empty() {
+                    return String::new();
+                }
+                format!("{indent}{}\n", trimmed)
+            }
+            Node::Element(element) => format!("{}\n", element.formatted(indent_level)),
             Node::Comment(comment) => format!("{indent}<!-- {comment} -->\n"),
         }
     }
@@ -189,5 +196,19 @@ mod tests {
         let actual = parse_child_nodes.parse_next(&mut input).unwrap();
         assert_eq!(input, remaining);
         assert_eq!(actual, expected);
+    }
+
+    #[rstest]
+    fn test_formatting_node_multiple_times_doesnt_change_output() {
+        let expected = "<div>\n\ttext\n</div>\n";
+        let parsed = Node::parse.parse(expected).unwrap();
+
+        let first_format = parsed.formatted(0);
+        assert_eq!(expected, first_format);
+
+        let second_parse = Node::parse.parse(first_format.as_str()).unwrap();
+
+        let second_format = second_parse.formatted(0);
+        assert_eq!(expected, second_format);
     }
 }
