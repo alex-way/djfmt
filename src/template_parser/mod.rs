@@ -9,13 +9,14 @@ mod comment;
 mod filter;
 mod tag;
 mod text;
+mod utils;
 mod variable;
 
 #[derive(Debug, PartialEq)]
 pub enum Node<'a> {
     Variable(VariableTag<'a>),
     Tag(Tag<'a>),
-    Comment(Comment<'a>),
+    Comment(&'a str),
     Text(&'a str),
 }
 
@@ -28,25 +29,34 @@ impl<'i> Template<'i> {
     pub fn parse(input: &mut &'i str) -> PResult<Self> {
         let mut nodes = vec![];
         while !input.is_empty() {
-            if let Ok(variable) = comment::Comment::parse.parse_next(input) {
-                nodes.push(Node::Comment(variable));
-                continue;
-            }
-
-            if let Ok(variable) = variable::VariableTag::parse.parse_next(input) {
-                nodes.push(Node::Variable(variable));
-                continue;
-            }
-
-            if let Ok(tag) = tag::Tag::parse.parse_next(input) {
-                nodes.push(Node::Tag(tag));
-                continue;
-            }
-
-            if let Ok(text) = text::parse_text.parse_next(input) {
-                if !text.is_empty() {
-                    nodes.push(Node::Text(text));
+            // Peek at the input to ensure the parser can successfully parse the next node
+            if Comment::parse.parse_peek(input).is_ok() {
+                if let Ok(variable) = Comment::parse.parse_next(input) {
+                    nodes.push(Node::Comment(variable.0));
                     continue;
+                }
+            }
+
+            if variable::VariableTag::parse.parse_peek(input).is_ok() {
+                if let Ok(variable) = variable::VariableTag::parse.parse_next(input) {
+                    nodes.push(Node::Variable(variable));
+                    continue;
+                }
+            }
+
+            if tag::Tag::parse.parse_peek(input).is_ok() {
+                if let Ok(tag) = tag::Tag::parse.parse_next(input) {
+                    nodes.push(Node::Tag(tag));
+                    continue;
+                }
+            }
+
+            if text::parse_text.parse_peek(input).is_ok() {
+                if let Ok(text) = text::parse_text.parse_next(input) {
+                    if !text.is_empty() {
+                        nodes.push(Node::Text(text));
+                        continue;
+                    }
                 }
             }
 
@@ -103,7 +113,7 @@ mod tests {
         Node::Text("hello"),
         Node::Variable(VariableTag { tag_type: "text", filters: vec![] }),
         Node::Text("there"),
-        Node::Comment(Comment { contents: "comment" }),
+        Node::Comment("comment"),
         Node::Text("again"),
         Node::Tag(Tag { tag_type: "thing", arguments: vec![] }),
         Node::Text("world"),

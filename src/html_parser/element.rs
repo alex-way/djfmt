@@ -9,6 +9,12 @@ use winnow::{
     PResult, Parser,
 };
 
+#[allow(dead_code)]
+const VOID_ELEMENT_NAMES: &[&str] = &[
+    "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source",
+    "track", "wbr",
+];
+
 #[derive(Debug, PartialEq)]
 pub enum ElementVariant {
     Normal,

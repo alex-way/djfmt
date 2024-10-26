@@ -16,7 +16,7 @@ struct Args {
     path: PathBuf,
 }
 
-fn format_file(path: &PathBuf) {
+fn format_file_both(path: &PathBuf) {
     let mut file = OpenOptions::new()
         .read(true)
         .write(true)
@@ -26,33 +26,16 @@ fn format_file(path: &PathBuf) {
     let mut contents = String::new();
     file.read_to_string(&mut contents).unwrap();
 
-    let parsed = Template::parse(&mut contents.as_str()).unwrap();
-    let formatted = parsed.formatted(0);
+    let parsed_template = Template::parse(&mut contents.as_str()).unwrap();
+    let formatted_template = parsed_template.formatted(0);
+
+    let parsed_html = Node::parse(&mut formatted_template.as_str()).unwrap();
+    let formatted_html = parsed_html.formatted(0);
 
     file.set_len(0).unwrap();
     file.seek(SeekFrom::Start(0)).unwrap();
 
-    file.write_all(formatted.as_bytes()).unwrap();
-    file.flush().unwrap();
-}
-
-fn format_html_contents(path: &PathBuf) {
-    let mut file = OpenOptions::new()
-        .read(true)
-        .write(true)
-        .open(path)
-        .unwrap();
-
-    let mut contents = String::new();
-    file.read_to_string(&mut contents).unwrap();
-
-    let parsed = Node::parse(&mut contents.as_str()).unwrap();
-    let formatted = parsed.formatted(0);
-
-    file.set_len(0).unwrap();
-    file.seek(SeekFrom::Start(0)).unwrap();
-
-    file.write_all(formatted.as_bytes()).unwrap();
+    file.write_all(formatted_html.as_bytes()).unwrap();
     file.flush().unwrap();
 }
 
@@ -65,8 +48,7 @@ fn main() {
     }
 
     if args.path.is_file() {
-        format_html_contents(&args.path);
-        format_file(&args.path);
+        format_file_both(&args.path);
         return;
     }
 
@@ -84,6 +66,6 @@ fn main() {
         .collect::<Vec<_>>();
 
     files.par_iter().for_each(|path| {
-        format_file(path);
+        format_file_both(path);
     });
 }

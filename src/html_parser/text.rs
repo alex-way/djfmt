@@ -1,8 +1,8 @@
-use winnow::{token::take_while, PResult, Parser};
+use winnow::{token::take_till, PResult, Parser};
 
 /// Parse the text between tags
 pub fn parse_text<'i>(input: &mut &'i str) -> PResult<&'i str> {
-    take_while(0.., |c: char| c != '<').parse_next(input)
+    take_till(0.., '<').parse_next(input)
 }
 
 #[cfg(test)]
