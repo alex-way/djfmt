@@ -9,6 +9,11 @@ use winnow::{
 
 use super::element::ElementVariant;
 
+const VOID_ELEMENT_NAMES: &[&str] = &[
+    "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source",
+    "track", "wbr",
+];
+
 pub fn parse_tag_name<'i>(input: &mut &'i str) -> PResult<&'i str> {
     take_while(1.., |c: char| {
         c.is_ascii() && c != '/' && c != '>' && c != ' '
@@ -48,13 +53,22 @@ impl<'i> Tag<'i> {
         parser.parse_peek(input)?;
 
         parser
-            .map(|(name, attributes, variant)| Self {
-                name,
-                attributes,
-                variant: match variant {
-                    Some(_) => ElementVariant::Void,
-                    None => ElementVariant::Normal,
-                },
+            .map(|(name, attributes, variant)| {
+                if VOID_ELEMENT_NAMES.contains(&name) {
+                    return Self {
+                        name,
+                        attributes,
+                        variant: ElementVariant::Void,
+                    };
+                }
+                Self {
+                    name,
+                    attributes,
+                    variant: match variant {
+                        Some(_) => ElementVariant::Void,
+                        None => ElementVariant::Normal,
+                    },
+                }
             })
             .parse_next(input)
     }
