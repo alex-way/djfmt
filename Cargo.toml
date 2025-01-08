@@ -10,7 +10,7 @@ rayon = "1.10.0"
 winnow = "0.6.20"
 
 [dev-dependencies]
-rstest = "0.23.0"
+rstest = "0.24.0"
 pretty_assertions = "1.4.1"
 criterion = { version = "0.5.1", features = ["html_reports"] }
 walkdir = "2.5.0"
